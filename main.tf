@@ -1,0 +1,40 @@
+provider "aws" {
+  region = var.region
+}
+
+module "network" {
+  source       = "./modules/network"
+  region       = var.region
+  vpc_cidr     = var.vpc_cidr
+  subnet_cidr  = var.subnet_cidr
+  cluster_name = var.cluster_name
+}
+
+module "security" {
+  source       = "./modules/security"
+  vpc_id       = module.network.vpc_id
+  vpc_cidr     = var.vpc_cidr
+  cluster_name = var.cluster_name
+}
+
+module "iam" {
+  source       = "./modules/iam"
+  cluster_name = var.cluster_name
+}
+
+module "instance" {
+  source                = "./modules/instance"
+  ami                   = var.ami
+  instance_type         = var.instance_type
+  subnet_id             = module.network.subnet_id
+  key_name              = var.key_name
+  vpc_security_group_id = module.security.security_group_id
+  iam_instance_profile  = module.iam.instance_profile_name
+  cluster_name          = var.cluster_name
+}
+
+module "s3" {
+  source        = "./modules/s3"
+  bucket_name   = var.bucket_name
+  force_destroy = true
+}
