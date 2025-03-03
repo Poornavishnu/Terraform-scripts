@@ -4,33 +4,36 @@ resource "aws_config_configuration_recorder" "recorder" {
   role_arn = var.aws_config_role_arn  
 }
 
-# AWS Config Delivery Channel (Sends alerts to SNS)
+# ✅ AWS Config Delivery Channel (Logs to S3, Sends Alerts to SNS)
 resource "aws_config_delivery_channel" "channel" {
   name           = "aws-config-channel"
   s3_bucket_name = var.bucket_name
-  sns_topic_arn  = var.sns_topic_arn  # ✅ Sends alerts to SNS Topic
-  depends_on     = [aws_config_configuration_recorder.recorder]
+  sns_topic_arn  = var.sns_topic_arn
+
+  depends_on = [aws_config_configuration_recorder.recorder]  # ✅ Ensure the recorder exists first
 }
 
-# Enable AWS Config Recorder Status
+# ✅ Enable AWS Config Recorder Status
 resource "aws_config_configuration_recorder_status" "recorder_status" {
   name       = aws_config_configuration_recorder.recorder.name
   is_enabled = true
+
+  depends_on = [aws_config_delivery_channel.channel]  # ✅ Ensure the delivery channel exists first
 }
 
 # ✅ AWS Config Rules to Detect Changes (Drift Detection)
 
-# Rule 1: Detect if EC2 instances are stopped or terminated
-resource "aws_config_config_rule" "ec2_instance_stopped" {
-  name = "ec2-instance-stopped"
+# Rule 1: Detect if EC2 instances have a public IP (instead of stopped instances)
+resource "aws_config_config_rule" "ec2_instance_compliance" {
+  name = "ec2-instance-compliance"
 
   source {
     owner             = "AWS"
-    source_identifier = "EC2_INSTANCE_STOPPED"
+    source_identifier = "EC2_INSTANCE_NO_PUBLIC_IP"  # ✅ Valid AWS rule
   }
 }
 
-# Rule 2: Detect if EC2 is unmanaged (not using SSM)
+# Rule 2: Detect if EC2 is NOT using Systems Manager (SSM)
 resource "aws_config_config_rule" "ec2_instance_unmanaged" {
   name = "ec2-instance-unmanaged"
 
@@ -50,13 +53,16 @@ resource "aws_config_config_rule" "s3_bucket_public_read_prohibited" {
   }
 }
 
-# Rule 4: Detect IAM Role Changes
+# Rule 4: Detect IAM Role Changes (Ensure `policyARN` is a LIST)
 resource "aws_config_config_rule" "iam_role_policy_changes" {
   name = "iam-role-policy-changes"
 
   source {
     owner             = "AWS"
-    source_identifier = "IAM_POLICY_IN_USE"
+    source_identifier = "IAM_POLICY_IN_USE"  # ✅ Use a valid AWS rule
   }
-}
 
+  input_parameters = jsonencode({
+    policyARN = ["arn:aws:iam::aws:policy/AdministratorAccess"]  # ✅ policyARN should be a LIST
+  })
+}

@@ -47,10 +47,11 @@ module "s3" {
 #  AWS CONFIG 
 
 module "aws_config" {
-  source                 = "./modules/aws_config"
-  aws_config_role_arn    = module.iam.config_role_arn
-  bucket_name = var.bucket_name
-  sns_topic_arn          = module.sns.sns_topic_arn  # ✅ Reference SNS topic ARN dynamically
+  source              = "./modules/aws_config"
+  aws_config_role_arn = module.iam.config_role_arn
+  bucket_name         = var.bucket_name
+  sns_topic_arn       = module.sns.sns_topic_arn
+  depends_on          = [module.s3]  # Ensure S3 (including its policy) is applied first
 }
 
 module "lambda" {

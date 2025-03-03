@@ -1,7 +1,11 @@
 # ✅ Create S3 Bucket
 resource "aws_s3_bucket" "terraform_state_bucket" {
-  bucket        = var.bucket_name
-  force_destroy = var.force_destroy  # Allow bucket deletion only if explicitly set
+  bucket = var.bucket_name
+
+  lifecycle {
+    prevent_destroy = true  # ✅ Prevent Terraform from deleting the bucket
+    ignore_changes  = [bucket]  # ✅ Ignore modifications to the bucket name
+  }
 }
 
 # ✅ Enable Versioning for State & Logs
@@ -50,8 +54,25 @@ resource "aws_s3_bucket_policy" "terraform_state_bucket_policy" {
         Principal = {
           Service = "config.amazonaws.com"
         },
-        Action = "s3:PutObject",
-        Resource = "${aws_s3_bucket.terraform_state_bucket.arn}/config-logs/*",
+        Action = [
+          "s3:PutObject"
+        ],
+        Resource = "${aws_s3_bucket.terraform_state_bucket.arn}/AWSLogs/${local.aws_account_id}/Config/*",  # ✅ Correct Prefix
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount": local.aws_account_id
+          }
+        }
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "config.amazonaws.com"
+        },
+        Action = [
+          "s3:GetBucketAcl"  # ✅ AWS Config needs this permission
+        ],
+        Resource = aws_s3_bucket.terraform_state_bucket.arn,
         Condition = {
           StringEquals = {
             "aws:SourceAccount": local.aws_account_id
@@ -61,15 +82,3 @@ resource "aws_s3_bucket_policy" "terraform_state_bucket_policy" {
     ]
   })
 }
-
-# # ✅ Ensure Terraform State is Locked (DynamoDB Optional)
-# resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
-#   bucket = aws_s3_bucket.terraform_state_bucket.id
-#   rule {
-#     id     = "expire-old-state-files"
-#     status = "Enabled"
-#     expiration {
-#       days = 90  # Auto-delete old versions after 90 days
-#     }
-#   }
-# }
