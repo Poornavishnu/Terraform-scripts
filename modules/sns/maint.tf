@@ -1,7 +1,9 @@
+# Create SNS Topic
 resource "aws_sns_topic" "config_alerts" {
   name = "config-alerts-topic"
 }
 
+# Attach SNS Topic Policy
 resource "aws_sns_topic_policy" "sns_policy" {
   arn = aws_sns_topic.config_alerts.arn
   policy = jsonencode({
@@ -13,4 +15,18 @@ resource "aws_sns_topic_policy" "sns_policy" {
       Resource = aws_sns_topic.config_alerts.arn
     }]
   })
+}
+
+# SNS Subscription for Email
+resource "aws_sns_topic_subscription" "email_subscription" {
+  topic_arn = aws_sns_topic.config_alerts.arn
+  protocol  = "email"
+  endpoint  = "gattupoornavishnu941@gmail.com"
+}
+
+# SNS Subscription for Mobile (SMS)
+resource "aws_sns_topic_subscription" "sms_subscription" {
+  topic_arn = aws_sns_topic.config_alerts.arn
+  protocol  = "sms"
+  endpoint  = "+14168368940"  
 }
