@@ -59,10 +59,10 @@ resource "aws_config_config_rule" "iam_role_policy_changes" {
 
   source {
     owner             = "AWS"
-    source_identifier = "IAM_POLICY_IN_USE"  # ✅ Use a valid AWS rule
+    source_identifier = "IAM_POLICY_IN_USE"
   }
 
   input_parameters = jsonencode({
-    policyARN = ["arn:aws:iam::aws:policy/AdministratorAccess"]  # ✅ policyARN should be a LIST
+    policyARN = "arn:aws:iam::aws:policy/AdministratorAccess"  # ✅ Ensure this is NOT blank
   })
 }
