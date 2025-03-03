@@ -43,6 +43,21 @@ output "route_table_id" {
   value = module.network.route_table_id
 }
 
+
+#  AWS config
+
+output "aws_config_recorder" {
+  value = module.aws_config.recorder_name
+}
+
+output "lambda_arn" {
+  value = module.lambda.lambda_arn
+}
+
+output "alarm_name" {
+  value = module.cloudwatch.alarm_name
+}
+
 # s3
 
 output "s3_bucket_name" {

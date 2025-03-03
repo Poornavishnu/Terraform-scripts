@@ -17,3 +17,12 @@ output "instance_profile_arn" {
   description = "ARN of the EC2 IAM instance profile"
   value       = aws_iam_instance_profile.ec2_profile.arn
 }
+
+output "lambda_role_arn" {
+  description = "ARN of the IAM role for Lambda"
+  value       = aws_iam_role.lambda_role.arn
+}
+
+output "sns_role_arn" {
+  value = aws_iam_role.sns_role.arn
+}

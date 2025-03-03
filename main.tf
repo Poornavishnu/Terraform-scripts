@@ -32,9 +32,32 @@ module "instance" {
   iam_instance_profile  = module.iam.instance_profile_name
   cluster_name          = var.cluster_name
 }
+data "aws_caller_identity" "current" {}
 
+locals {
+  aws_account_id = data.aws_caller_identity.current.account_id
+}
 module "s3" {
   source        = "./modules/s3"
   bucket_name   = var.bucket_name
   force_destroy = true
+}
+
+
+#  AWS CONFIG 
+
+module "aws_config" {
+  source             = "./modules/aws_config"
+  aws_config_role_arn = module.iam.config_role.arn
+  existing_s3_bucket_name = var.bucket_name
+}
+
+module "lambda" {
+  source         = "./modules/lambda"
+  lambda_role_arn = module.iam.lambda_role_arn  # Reference the IAM role dynamically
+}
+
+module "cloudwatch" {
+  source         = "./modules/cloudwatch"
+  sns_topic_arn  = aws_sns_topic.config_alerts.arn
 }
