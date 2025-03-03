@@ -1,3 +1,5 @@
+# EC2 ROLE AND EC2 PROFILE 
+
 resource "aws_iam_role" "ec2_role" {
   name = "${var.cluster_name}-ec2-role"
 
@@ -16,6 +18,10 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
+
+#  AWS CONFIG ROLE 
+
+
 resource "aws_iam_role" "config_role" {
   name = "aws_config_role"
   assume_role_policy = jsonencode({
@@ -27,6 +33,8 @@ resource "aws_iam_role" "config_role" {
     }]
   })
 }
+
+# AWS LAMBDA ROLE AND POLICY ATTACHMENT
 
 resource "aws_iam_role" "lambda_role" {
   name = "lambda_execution_role"
@@ -48,6 +56,9 @@ resource "aws_iam_policy_attachment" "lambda_basic_execution" {
   roles      = [aws_iam_role.lambda_role.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+
+#  SNS ROLE AND POLICY FOR NOTIFICATIONS
 
 resource "aws_iam_role" "sns_role" {
   name = "sns_publish_role"

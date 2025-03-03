@@ -47,17 +47,23 @@ module "s3" {
 #  AWS CONFIG 
 
 module "aws_config" {
-  source             = "./modules/aws_config"
-  aws_config_role_arn = module.iam.config_role.arn
-  existing_s3_bucket_name = var.bucket_name
+  source                 = "./modules/aws_config"
+  aws_config_role_arn    = module.iam.config_role_arn
+  bucket_name = var.bucket_name
+  sns_topic_arn          = module.sns.sns_topic_arn  # ✅ Reference SNS topic ARN dynamically
 }
 
 module "lambda" {
   source         = "./modules/lambda"
-  lambda_role_arn = module.iam.lambda_role_arn  # Reference the IAM role dynamically
+  lambda_role_arn = module.iam.lambda_role_arn
+  sns_topic_arn  = module.sns.sns_topic_arn  # ✅ Correct reference
 }
 
 module "cloudwatch" {
   source         = "./modules/cloudwatch"
-  sns_topic_arn  = aws_sns_topic.config_alerts.arn
+  sns_topic_arn = module.sns.sns_topic_arn
+}
+
+module "sns" {
+  source = "./modules/sns"
 }

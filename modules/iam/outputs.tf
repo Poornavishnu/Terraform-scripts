@@ -26,3 +26,8 @@ output "lambda_role_arn" {
 output "sns_role_arn" {
   value = aws_iam_role.sns_role.arn
 }
+
+output "config_role_arn" {
+  description = "ARN of the app_config role for Lambda"
+  value       = aws_iam_role.config_role.arn
+}

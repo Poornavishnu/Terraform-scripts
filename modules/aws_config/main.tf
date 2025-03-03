@@ -6,6 +6,7 @@ resource "aws_config_configuration_recorder" "recorder" {
 resource "aws_config_delivery_channel" "channel" {
   name           = "aws-config-channel"
   s3_bucket_name = var.bucket_name
+  sns_topic_arn  = var.sns_topic_arn  # ✅ Add SNS Topic ARN
   depends_on     = [aws_config_configuration_recorder.recorder]
 }
 
