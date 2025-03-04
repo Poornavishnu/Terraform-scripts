@@ -79,24 +79,90 @@ resource "aws_iam_role_policy_attachment" "config_role_policy" {
 
 # AWS LAMBDA ROLE AND POLICY ATTACHMENT
 
+
+
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "terraform_drift_lambda_policy"
+  description = "IAM Policy for Terraform Drift Detection Lambda"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+
+      # ✅ Allow Lambda to Write Logs to CloudWatch
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "arn:aws:logs:*:*:*"
+      },
+
+      # ✅ Allow Lambda to Access Terraform State in S3
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "arn:aws:s3:::your-terraform-state-bucket",
+          "arn:aws:s3:::your-terraform-state-bucket/*"
+        ]
+      },
+
+      # ✅ Allow Lambda to Publish to SNS (For Drift Alerts)
+      {
+        Effect = "Allow",
+        Action = "sns:Publish",
+        Resource = var.sns_topic_arn
+      },
+
+      # ✅ Allow Lambda to Read SSM Parameter Store (If SNS ARN is stored there)
+      {
+        Effect = "Allow",
+        Action = "ssm:GetParameter",
+        Resource = "arn:aws:ssm:your-region:your-account-id:parameter/terraform/sns_topic_arn"
+      },
+
+      # ✅ Allow Lambda to Work with AWS Config
+      {
+        Effect = "Allow",
+        Action = [
+          "config:GetComplianceDetailsByConfigRule",
+          "config:GetComplianceDetailsByResource",
+          "config:DescribeConfigRules"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "lambda_role" {
   name = "lambda_execution_role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Effect = "Allow",
       Principal = {
         Service = "lambda.amazonaws.com"
-      }
+      },
+      Action = "sts:AssumeRole"
     }]
   })
 }
 
-resource "aws_iam_policy_attachment" "lambda_basic_execution" {
-  name       = "lambda_basic_execution"
-  roles      = [aws_iam_role.lambda_role.name]
+resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 

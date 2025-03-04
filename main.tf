@@ -20,6 +20,7 @@ module "security" {
 module "iam" {
   source       = "./modules/iam"
   cluster_name = var.cluster_name
+  sns_topic_arn = module.sns.sns_topic_arn  # ✅ Pass SNS ARN dynamically
 }
 
 module "instance" {
@@ -56,8 +57,8 @@ module "aws_config" {
 
 module "lambda" {
   source         = "./modules/lambda"
-  lambda_role_arn = module.iam.lambda_role_arn
-  sns_topic_arn  = module.sns.sns_topic_arn  # ✅ Correct reference
+  lambda_role_arn = module.iam.lambda_role_arn  # ✅ Pass IAM role from IAM module
+  sns_topic_arn  = module.sns.sns_topic_arn
 }
 
 module "cloudwatch" {
@@ -67,4 +68,5 @@ module "cloudwatch" {
 
 module "sns" {
   source = "./modules/sns"
+  sns_topic_arn  = module.sns.sns_topic_arn
 }

@@ -1,8 +1,8 @@
-variable "lambda_role_arn" {
-  description = "IAM Role ARN for Lambda function"
+variable "sns_topic_arn" {
+  description = "SNS Topic ARN for notifications"
   type        = string
 }
-variable "sns_topic_arn" {
-  description = "SNS Topic ARN for Lambda notifications"
+variable "lambda_role_arn" {
+  description = "IAM Role ARN for Lambda function"
   type        = string
 }
