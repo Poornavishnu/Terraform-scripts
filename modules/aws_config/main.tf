@@ -1,71 +1,32 @@
-# Enable AWS Config Recorder
-# resource "aws_config_configuration_recorder" "recorder" {
-#   name     = "aws-config-recorder"
-#   role_arn = var.aws_config_role_arn  
-
-#   recording_group {
-#   all_supported = false
-#   include_global_resource_types = false  # Disable global tracking (IAM, CloudTrail, etc.)
-#   resource_types = [
-#     "AWS::EC2::Instance"  # ✅ Only track EC2
-#   ]
-# }
-# }
 
 # AWS Config Configuration Recorder (Tracks Only EC2)
-# resource "aws_config_configuration_recorder" "recorder" {
-#   name     = "aws-config-recorder"
-#   role_arn = var.aws_config_role_arn
-
-#   recording_group {
-#     all_supported = false
-#     resource_types = [
-#       "AWS::EC2::Instance",
-#       "AWS::S3::Bucket"  # ✅ Add S3 as an additional resource to test
-#     ]
-#   }
-# }
-
-# resource "aws_config_configuration_recorder" "recorder" {
-#   name     = "aws-config-recorder"
-#   role_arn = var.aws_config_role_arn # Ensure correct IAM role
-
-#   recording_group {
-#     all_supported = false
-#     resource_types = [
-#       "AWS::EC2::Instance"  # ✅ Matches the CLI command that worked
-#     ]
-#   }
-# }
-
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "aws-config-recorder"
-  role_arn = var.aws_config_role_arn  # Ensure this IAM role exists
+  role_arn = var.aws_config_role_arn
 
   recording_group {
-    all_supported                 = false
-    include_global_resource_types = false  # ✅ Ensures IAM resources aren't required
-    resource_types                = ["AWS::EC2::Instance"]  # ✅ AWS requires a valid resource type
+    all_supported = false
+    resource_types = [
+      "AWS::EC2::Instance",
+      "AWS::S3::Bucket"  # ✅ Add S3 as an additional resource to test
+    ]
   }
 }
 
-# ✅ AWS Config Delivery Channel (Logs to S3, Sends Alerts to SNS)
 resource "aws_config_delivery_channel" "channel" {
   name           = "aws-config-channel"
   s3_bucket_name = var.bucket_name
   sns_topic_arn  = var.sns_topic_arn
 
-  depends_on = [aws_config_configuration_recorder.recorder]  # ✅ Ensure the recorder exists first
+  depends_on = [aws_config_configuration_recorder.recorder]  # ✅ Ensures Config Recorder exists first
 }
 
-# ✅ Enable AWS Config Recorder Status
 resource "aws_config_configuration_recorder_status" "recorder_status" {
   name       = aws_config_configuration_recorder.recorder.name
   is_enabled = true
 
-  depends_on = [aws_config_delivery_channel.channel]  # ✅ Ensure the delivery channel exists first
+  depends_on = [aws_config_delivery_channel.channel]  # ✅ Ensures the delivery channel exists first
 }
-
 # ✅ AWS Config Rules to Detect Changes (Drift Detection)
 
 # Rule 1: Detect if EC2 instances have a public IP (instead of stopped instances)
