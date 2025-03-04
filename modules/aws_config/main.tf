@@ -1,7 +1,27 @@
 # Enable AWS Config Recorder
+# resource "aws_config_configuration_recorder" "recorder" {
+#   name     = "aws-config-recorder"
+#   role_arn = var.aws_config_role_arn  
+
+#   recording_group {
+#   all_supported = false
+#   include_global_resource_types = false  # Disable global tracking (IAM, CloudTrail, etc.)
+#   resource_types = [
+#     "AWS::EC2::Instance"  # ✅ Only track EC2
+#   ]
+# }
+# }
+
+# AWS Config Configuration Recorder (Tracks Only EC2)
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "aws-config-recorder"
-  role_arn = var.aws_config_role_arn  
+  role_arn = var.aws_config_role_arn
+
+  recording_group {
+    all_supported = false
+    include_global_resource_types = false
+    resource_types = ["AWS::EC2::Instance"]
+  }
 }
 
 # ✅ AWS Config Delivery Channel (Logs to S3, Sends Alerts to SNS)

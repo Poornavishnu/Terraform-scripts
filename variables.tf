@@ -42,3 +42,7 @@ variable "bucket_name" {
 # AWS CONFIG
 
 
+variable "iam_instance_profile" {
+  type = string
+  default = "EC2SSMProfile"  # Optional, remove if passing dynamically
+}

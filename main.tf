@@ -29,7 +29,7 @@ module "instance" {
   subnet_id             = module.network.subnet_id
   key_name              = var.key_name
   vpc_security_group_id = module.security.security_group_id
-  iam_instance_profile  = module.iam.instance_profile_name
+  iam_instance_profile  = module.iam.ssm_instance_profile_name  
   cluster_name          = var.cluster_name
 }
 data "aws_caller_identity" "current" {}

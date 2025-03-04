@@ -31,3 +31,8 @@ output "config_role_arn" {
   description = "ARN of the app_config role for Lambda"
   value       = aws_iam_role.config_role.arn
 }
+
+output "ssm_instance_profile_name" {
+  description = "IAM instance profile for SSM-managed EC2 instances"
+  value       = aws_iam_instance_profile.ssm_instance_profile.name
+}
