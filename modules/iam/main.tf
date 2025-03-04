@@ -44,11 +44,36 @@ resource "aws_iam_role" "config_role" {
     }]
   })
 }
+resource "aws_iam_policy" "aws_config_passrole_policy" {
+  name        = "AWSConfigPassRolePolicy"
+  description = "Allow AWS Config to assume aws_config_role"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "iam:PassRole"
+        Resource = aws_iam_role.config_role.arn
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService": "config.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
 
+# ✅ Attach the PassRole Policy to aws_config_role
+resource "aws_iam_role_policy_attachment" "aws_config_passrole_attachment" {
+  policy_arn = aws_iam_policy.aws_config_passrole_policy.arn
+  role       = aws_iam_role.config_role.name
+}
 # Attach AWS Managed Config Role Policy
 resource "aws_iam_role_policy_attachment" "config_role_policy" {
   role       = aws_iam_role.config_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/aws_config_role"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
 

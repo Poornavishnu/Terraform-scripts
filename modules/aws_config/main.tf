@@ -13,14 +13,39 @@
 # }
 
 # AWS Config Configuration Recorder (Tracks Only EC2)
+# resource "aws_config_configuration_recorder" "recorder" {
+#   name     = "aws-config-recorder"
+#   role_arn = var.aws_config_role_arn
+
+#   recording_group {
+#     all_supported = false
+#     resource_types = [
+#       "AWS::EC2::Instance",
+#       "AWS::S3::Bucket"  # ✅ Add S3 as an additional resource to test
+#     ]
+#   }
+# }
+
+# resource "aws_config_configuration_recorder" "recorder" {
+#   name     = "aws-config-recorder"
+#   role_arn = var.aws_config_role_arn # Ensure correct IAM role
+
+#   recording_group {
+#     all_supported = false
+#     resource_types = [
+#       "AWS::EC2::Instance"  # ✅ Matches the CLI command that worked
+#     ]
+#   }
+# }
+
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "aws-config-recorder"
-  role_arn = var.aws_config_role_arn
+  role_arn = var.aws_config_role_arn  # Ensure this IAM role exists
 
   recording_group {
-    all_supported = false
-    include_global_resource_types = false
-    resource_types = ["AWS::EC2::Instance"]
+    all_supported                 = false
+    include_global_resource_types = false  # ✅ Ensures IAM resources aren't required
+    resource_types                = ["AWS::EC2::Instance"]  # ✅ AWS requires a valid resource type
   }
 }
 
@@ -85,4 +110,19 @@ resource "aws_config_config_rule" "iam_role_policy_changes" {
   input_parameters = jsonencode({
     policyARN = "arn:aws:iam::aws:policy/AdministratorAccess"  # ✅ Ensure this is NOT blank
   })
+}
+
+resource "aws_config_config_rule" "ec2_stopped_instance" {
+  name = "ec2-stopped-instance"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "EC2_STOPPED_INSTANCE"
+  }
+
+  scope {
+    compliance_resource_types = ["AWS::EC2::Instance"]
+  }
+
+  maximum_execution_frequency = "TwentyFour_Hours"
 }
