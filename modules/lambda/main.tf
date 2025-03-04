@@ -41,7 +41,7 @@ resource "aws_iam_policy" "lambda_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
-  role       = var.lambda_role_arn  # ✅ Use IAM role from IAM module
+  role       = basename(var.lambda_role_arn)  # ✅ Extracts only the role name, avoiding AWS validation errors
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 

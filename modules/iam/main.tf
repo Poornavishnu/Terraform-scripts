@@ -1,5 +1,4 @@
-# EC2 ROLE AND EC2 PROFILE 
-
+# ✅ EC2 Role and Profile
 resource "aws_iam_role" "ec2_role" {
   name = "my-cluster-ec2-role"
 
@@ -14,7 +13,7 @@ resource "aws_iam_role" "ec2_role" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes = [name]  # ✅ Prevent Terraform from modifying/deleting it
+    ignore_changes = [name]  # Prevent Terraform from modifying/deleting it
   }
 }
 
@@ -23,16 +22,14 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 
   lifecycle {
-    prevent_destroy = true  # ✅ Prevent accidental deletion
-    ignore_changes  = [name]  # ✅ Ignore instance profile name changes
+    prevent_destroy = true  # Prevent accidental deletion
+    ignore_changes  = [name]  # Ignore instance profile name changes
   }
 }
 
-#  AWS CONFIG ROLE 
-
-
+# ✅ AWS Config Role
 resource "aws_iam_role" "config_role" {
-  name = "aws_config_role"
+  name = "aws-config-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -44,12 +41,13 @@ resource "aws_iam_role" "config_role" {
     }]
   })
 }
+
 resource "aws_iam_policy" "aws_config_passrole_policy" {
   name        = "AWSConfigPassRolePolicy"
   description = "Allow AWS Config to assume aws_config_role"
-  
+
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
         Effect = "Allow"
@@ -65,23 +63,24 @@ resource "aws_iam_policy" "aws_config_passrole_policy" {
   })
 }
 
-# ✅ Attach the PassRole Policy to aws_config_role
 resource "aws_iam_role_policy_attachment" "aws_config_passrole_attachment" {
   policy_arn = aws_iam_policy.aws_config_passrole_policy.arn
   role       = aws_iam_role.config_role.name
 }
-# Attach AWS Managed Config Role Policy
+
 resource "aws_iam_role_policy_attachment" "config_role_policy" {
   role       = aws_iam_role.config_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
+# ✅ Check if the Lambda Policy already exists
+data "aws_iam_policy" "existing_lambda_policy" {
+  name = "terraform_drift_lambda_policy"
+}
 
-# AWS LAMBDA ROLE AND POLICY ATTACHMENT
-
-
-
+# ✅ Create the policy only if it does NOT already exist
 resource "aws_iam_policy" "lambda_policy" {
+  count = length(data.aws_iam_policy.existing_lambda_policy.arn) > 0 ? 0 : 1
   name        = "terraform_drift_lambda_policy"
   description = "IAM Policy for Terraform Drift Detection Lambda"
 
@@ -118,29 +117,12 @@ resource "aws_iam_policy" "lambda_policy" {
         Effect = "Allow",
         Action = "sns:Publish",
         Resource = var.sns_topic_arn
-      },
-
-      # ✅ Allow Lambda to Read SSM Parameter Store (If SNS ARN is stored there)
-      {
-        Effect = "Allow",
-        Action = "ssm:GetParameter",
-        Resource = "arn:aws:ssm:your-region:your-account-id:parameter/terraform/sns_topic_arn"
-      },
-
-      # ✅ Allow Lambda to Work with AWS Config
-      {
-        Effect = "Allow",
-        Action = [
-          "config:GetComplianceDetailsByConfigRule",
-          "config:GetComplianceDetailsByResource",
-          "config:DescribeConfigRules"
-        ],
-        Resource = "*"
       }
     ]
   })
 }
 
+# ✅ Lambda Role
 resource "aws_iam_role" "lambda_role" {
   name = "lambda_execution_role"
 
@@ -156,9 +138,13 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
+# ✅ Attach the correct policy (either existing or newly created)
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_policy.arn
+  policy_arn = coalesce(
+    one(aws_iam_policy.lambda_policy[*].arn),  # ✅ Use the new policy ARN if created
+    data.aws_iam_policy.existing_lambda_policy.arn  # ✅ Use the existing policy if it already exists
+  )
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
@@ -166,11 +152,9 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-
-#  SNS ROLE AND POLICY FOR NOTIFICATIONS
-
+# ✅ SNS Role and Policy for Notifications
 resource "aws_iam_role" "sns_role" {
-  name = "sns_publish_role"
+  name = "sns-publish-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -190,6 +174,7 @@ resource "aws_iam_policy_attachment" "sns_publish_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
 }
 
+# ✅ EC2 SSM Role
 resource "aws_iam_role" "ssm_role" {
   name = "EC2SSMRole"
 
