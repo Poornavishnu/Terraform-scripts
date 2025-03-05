@@ -82,3 +82,10 @@ resource "aws_s3_bucket_policy" "terraform_state_bucket_policy" {
     ]
   })
 }
+
+resource "aws_s3_object" "lambda_zip" {
+  bucket = aws_s3_bucket.terraform_state_bucket.id
+  key    = "lambda-code/terraform-drift-detection.zip"
+  source = "${path.root}/modules/lambda/lambda_function.zip"  # ✅ Correct file location
+  etag   = filemd5("${path.root}/modules/lambda/lambda_function.zip")  # ✅ Compute hash from correct path
+}

@@ -46,3 +46,9 @@ variable "iam_instance_profile" {
   type = string
   default = "EC2SSMProfile"  # Optional, remove if passing dynamically
 }
+
+variable "s3_key" {
+  description = "The S3 key (object path) where the Lambda function ZIP file is stored"
+  type        = string
+  default     = "lambda-code/terraform-drift-detection.zip"
+}
