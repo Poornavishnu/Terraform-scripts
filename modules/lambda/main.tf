@@ -2,7 +2,7 @@
 
 resource "aws_lambda_function" "terraform_drift_detection" {
   function_name = "terraform-drift-detection"
-  role          = var.lambda_role_arn  # ✅ Reference IAM role from `modules/iam`
+  role          = var.lambda_role_arn  #  Reference of IAM role from `modules/iam`
 
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
@@ -24,7 +24,8 @@ resource "aws_lambda_function" "terraform_drift_detection" {
   ]
 }
 
-# ✅ Allow SNS to invoke Lambda
+#  Allow SNS to invoke Lambda
+
 resource "aws_lambda_permission" "allow_sns" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
@@ -33,18 +34,18 @@ resource "aws_lambda_permission" "allow_sns" {
   source_arn    = var.sns_topic_arn
 }
 
-# ✅ Lambda Layer for `requests` library
+#  Lambda Layer for `requests` library
 resource "aws_lambda_layer_version" "requests_layer" {
   layer_name          = "requests-layer"
   description         = "Lambda Layer containing requests module"
   compatible_runtimes = ["python3.9"]
-  filename            = "${path.module}/requests-layer.zip"  # ✅ Ensure Terraform looks in the correct directory
+  filename            = "${path.module}/requests-layer.zip"  #  Ensure looks in the local directory
 }
 
-# ✅ Lambda Layer for Terraform CLI
+#  Lambda Layer for Terraform CLI
 resource "aws_lambda_layer_version" "terraform_layer" {
   layer_name          = "terraform-cli-layer"
   s3_bucket          = var.bucket_name
-  s3_key             = "lambda-layers/terraform_layer.zip"
+  s3_key             = "lambda-layers/terraform_layer.zip"  # The s3_key defines the location of the ZIP file within the S3 bucket.
   compatible_runtimes = ["python3.9"]
 }

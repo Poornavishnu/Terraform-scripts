@@ -20,7 +20,7 @@ module "security" {
 module "iam" {
   source       = "./modules/iam"
   cluster_name = var.cluster_name
-  sns_topic_arn = module.sns.sns_topic_arn  # ✅ Pass SNS ARN dynamically
+  sns_topic_arn = module.sns.sns_topic_arn  #  Passes SNS ARN dynamically
   s3_key = var.s3_key
   lambda_role_arn = module.iam.lambda_role_arn
   bucket_name = var.bucket_name
@@ -60,7 +60,7 @@ module "aws_config" {
 
 module "lambda" {
   source         = "./modules/lambda"
-  lambda_role_arn = module.iam.lambda_role_arn  # ✅ Pass IAM role from IAM module
+  lambda_role_arn = module.iam.lambda_role_arn  #  Pass IAM role from IAM module
   sns_topic_arn  = module.sns.sns_topic_arn
   bucket_name         = var.bucket_name
   s3_key    = module.s3.s3_key

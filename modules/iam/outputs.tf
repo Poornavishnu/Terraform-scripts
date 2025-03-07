@@ -20,7 +20,7 @@ output "instance_profile_arn" {
 
 output "lambda_role_arn" {
   description = "ARN of the IAM role for Lambda"
-  value       = aws_iam_role.lambda_role.arn
+  value       = aws_iam_role.lambda_execution_role.arn
 }
 
 output "sns_role_arn" {

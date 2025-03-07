@@ -1,3 +1,12 @@
+
+#  This is a basic networking setup
+
+# Created a VPC (aws_vpc.main) with an internet gateway.
+# Created a single Public Subnet (aws_subnet.main) for launching instances with public IPs.
+# Attached an Internet Gateway (aws_internet_gateway.gw) to the VPC.
+# Defined a Route Table (aws_route_table.rt) with a default route (0.0.0.0/0 → IGW).
+# Associated the Route Table with the Public Subnet to enable internet access.
+
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
   enable_dns_support = true

@@ -1,5 +1,16 @@
 
-# AWS Config Configuration Recorder (Tracks Only EC2)
+# AWS Config - 
+
+# AWS config focus on two main things 
+# 1. aws config recorder
+# 2. aws config rule
+
+
+# Below is the aws config recorder by default it can record all the resources in the specific region 
+# but due to pricing issue I restricted it to record events only related to S3 and EC2
+# In this below example we can add multiple resources that we need to track under recording group
+
+
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "aws-config-recorder"
   role_arn = var.aws_config_role_arn
@@ -8,38 +19,55 @@ resource "aws_config_configuration_recorder" "recorder" {
     all_supported = false
     resource_types = [
       "AWS::EC2::Instance",
-      "AWS::S3::Bucket"  # ✅ Add S3 as an additional resource to test
+      "AWS::S3::Bucket"  #  Add S3 as an additional resource to test
     ]
   }
 }
+
+# The changes tracked by aws config needs to be stores so I am using S3 to store it and I am using SNS to 
+# send the alerts to my email
 
 resource "aws_config_delivery_channel" "channel" {
   name           = "aws-config-channel"
   s3_bucket_name = var.bucket_name
   sns_topic_arn  = var.sns_topic_arn
 
-  depends_on = [aws_config_configuration_recorder.recorder]  # ✅ Ensures Config Recorder exists first
+  depends_on = [aws_config_configuration_recorder.recorder]  # Ensures Config Recorder exists first
 }
+
+# This resource activates the AWS Config recorder so that it starts capturing configuration changes.
+# If the recorder is not active it doesnt record the event changes 
+
 
 resource "aws_config_configuration_recorder_status" "recorder_status" {
   name       = aws_config_configuration_recorder.recorder.name
   is_enabled = true
 
-  depends_on = [aws_config_delivery_channel.channel]  # ✅ Ensures the delivery channel exists first
+  depends_on = [aws_config_delivery_channel.channel]  # Ensures the delivery channel exists first
 }
-# ✅ AWS Config Rules to Detect Changes (Drift Detection)
 
-# Rule 1: Detect if EC2 instances have a public IP (instead of stopped instances)
+
+# 2. AWS Config Rules to Detect Changes (Drift Detection)
+# We can setup these as per our requirement like 
+# AWS Config rules evaluate whether AWS resource configurations comply with security best practices or organizational policies.
+# Rules can be grouped based on compliance standards (e.g., CIS Benchmark, PCI DSS) or organizational tagging.
+# AWS Conformance Packs help organize and deploy multiple rules as a group.
+# there are 233 AWS Config managed rules available.
+
+
+
+
+# Detect if EC2 instances have a public IP (instead of stopped instances)
 resource "aws_config_config_rule" "ec2_instance_compliance" {
   name = "ec2-instance-compliance"
 
   source {
     owner             = "AWS"
-    source_identifier = "EC2_INSTANCE_NO_PUBLIC_IP"  # ✅ Valid AWS rule
+    source_identifier = "EC2_INSTANCE_NO_PUBLIC_IP"  # Valid AWS rule
   }
 }
 
-# Rule 2: Detect if EC2 is NOT using Systems Manager (SSM)
+# Detect if EC2 is NOT using Systems Manager (SSM)
 resource "aws_config_config_rule" "ec2_instance_unmanaged" {
   name = "ec2-instance-unmanaged"
 
@@ -49,7 +77,7 @@ resource "aws_config_config_rule" "ec2_instance_unmanaged" {
   }
 }
 
-# Rule 3: Detect if an S3 bucket has public read access
+# Detect if an S3 bucket has public read access
 resource "aws_config_config_rule" "s3_bucket_public_read_prohibited" {
   name = "s3-bucket-public-read-prohibited"
 
@@ -59,20 +87,7 @@ resource "aws_config_config_rule" "s3_bucket_public_read_prohibited" {
   }
 }
 
-# Rule 4: Detect IAM Role Changes (Ensure `policyARN` is a LIST)
-resource "aws_config_config_rule" "iam_role_policy_changes" {
-  name = "iam-role-policy-changes"
-
-  source {
-    owner             = "AWS"
-    source_identifier = "IAM_POLICY_IN_USE"
-  }
-
-  input_parameters = jsonencode({
-    policyARN = "arn:aws:iam::aws:policy/AdministratorAccess"  # ✅ Ensure this is NOT blank
-  })
-}
-
+# Detect if an ec2 is stopped 
 resource "aws_config_config_rule" "ec2_stopped_instance" {
   name = "ec2-stopped-instance"
 

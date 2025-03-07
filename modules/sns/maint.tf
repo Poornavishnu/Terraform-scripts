@@ -17,6 +17,13 @@ resource "aws_sns_topic_policy" "sns_policy" {
   })
 }
 
+# # SNS Subscription for Lambda
+# resource "aws_sns_topic_subscription" "lambda_subscription" {
+#   topic_arn = aws_sns_topic.config_alerts.arn
+#   protocol  = "lambda"
+#   endpoint  = module.lambda.lambda_function_arn  # Ensure this references your Lambda ARN
+# }
+
 # SNS Subscription for Email
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.config_alerts.arn

@@ -4,7 +4,7 @@ resource "aws_instance" "control_node" {
   subnet_id              = var.subnet_id
   key_name               = var.key_name
   vpc_security_group_ids = [var.vpc_security_group_id]
-  iam_instance_profile   = var.iam_instance_profile  # ✅ Correct: Use passed variable
+  iam_instance_profile   = var.iam_instance_profile  #  Correct: Use passed variable
 
   tags = {
     Name = "${var.cluster_name}-control-node"
@@ -19,7 +19,7 @@ resource "aws_instance" "worker_nodes" {
   subnet_id              = var.subnet_id
   key_name               = var.key_name
   vpc_security_group_ids = [var.vpc_security_group_id]
-  iam_instance_profile   = var.iam_instance_profile  # ✅ Correct: Use passed variable
+  iam_instance_profile   = var.iam_instance_profile  #  Correct: Use passed variable
   
   tags = {
     Name = "${var.cluster_name}-worker-node-${count.index}"
