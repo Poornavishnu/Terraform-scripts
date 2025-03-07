@@ -19,7 +19,7 @@ resource "aws_config_configuration_recorder" "recorder" {
     all_supported = false
     resource_types = [
       "AWS::EC2::Instance",
-      "AWS::S3::Bucket"  #  Add S3 as an additional resource to test
+      "AWS::S3::Bucket"  
     ]
   }
 }
